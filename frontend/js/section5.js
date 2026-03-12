@@ -1,6 +1,64 @@
+/**
+ * ============================================================
+ * section5.js  -  토큰 로그 (🪙 token) 섹션
+ * ============================================================
+ *
+ * [역할]
+ *   AI API(Claude 등) 사용 과정에서 소비된 토큰 통계와
+ *   예상 비용을 대시보드 형태로 표시합니다.
+ *   토큰은 AI 언어모델이 텍스트를 처리하는 단위이며,
+ *   API 사용 비용은 토큰 수에 비례합니다.
+ *
+ * [사용 페이지] frontend/app.html (id="page-token" 섹션)
+ *
+ * [화면 구성]
+ *   ① 요약 카드: 총 토큰 수, API 호출 횟수
+ *   ② 입력/출력 토큰 비율 막대 그래프 (인라인 스타일 width% 조절)
+ *   ③ 예상 비용 (USD / KRW)
+ *   ④ 최근 API 호출 기록 목록
+ *
+ * [토큰이란?]
+ *   LLM(대규모 언어 모델)이 텍스트를 처리할 때 사용하는 단위.
+ *   대략 영문 4자 또는 한글 1~2자에 해당합니다.
+ *   - 입력 토큰(prompt_tokens):   AI에게 보낸 질문/지시문
+ *   - 출력 토큰(completion_tokens): AI가 생성한 답변
+ *
+ * [사용되는 외부 함수 - app.js에 정의]
+ *   - apiFetch(path, options) : 인증 헤더가 포함된 API 호출
+ * ============================================================
+ */
+
+/**
+ * renderTokenPage()
+ * ─────────────────────────────────────
+ * [역할] 토큰 사용 통계 대시보드를 화면에 렌더링합니다.
+ *        goPage("token") 호출 시 실행됩니다.
+ *
+ * [API 호출]
+ *   엔드포인트: GET /api/token/logs
+ *   응답 예시: {
+ *     prompt_tokens:     5000,    // 입력 토큰 누적 합계
+ *     completion_tokens: 2000,    // 출력 토큰 누적 합계
+ *     total_tokens:      7000,    // 전체 토큰 (입력 + 출력)
+ *     call_count:        42,      // 총 API 호출 횟수
+ *     total_cost_usd:    0.0105,  // 예상 비용 (달러)
+ *     total_cost_krw:    14.28,   // 예상 비용 (원화)
+ *     history: [
+ *       { action: "explain", total: 350, ts: "2026-03-12 14:30" },
+ *       ...
+ *     ]
+ *   }
+ *
+ * [입력/출력 비율 막대]
+ *   입력 + 출력 토큰의 합을 100%로 하여
+ *   각각의 비율을 CSS width(%)로 표현합니다.
+ *   - 파란색 막대: 입력 토큰 비율 (#5b7cff)
+ *   - 주황색 막대: 출력 토큰 비율 (#f28c52)
+ */
 async function renderTokenPage() {
   const container = document.getElementById("page-token");
 
+  // 페이지 초기 HTML 뼈대와 로딩 중 표시
   container.innerHTML = `
     <h1 style="margin-bottom:20px;">⚡ 토큰 로그</h1>
 
@@ -26,22 +84,27 @@ async function renderTokenPage() {
   `;
 
   try {
+    // GET /api/token/logs: 토큰 사용 통계 요청
     const res = await apiFetch("/api/token/logs");
     if (!res.ok) throw new Error("토큰 로그 조회 실패");
 
     const data = await res.json();
 
-    const inputTokens = Number(data.prompt_tokens || 0);
+    // 서버 응답 데이터 추출 (없으면 0 처리)
+    const inputTokens  = Number(data.prompt_tokens     || 0);
     const outputTokens = Number(data.completion_tokens || 0);
-    const totalTokens = Number(data.total_tokens || 0);
-    const callCount = Number(data.call_count || 0);
-    const costUsd = data.total_cost_usd || 0;
-    const costKrw = data.total_cost_krw || 0;
+    const totalTokens  = Number(data.total_tokens      || 0);
+    const callCount    = Number(data.call_count        || 0);
+    const costUsd      = data.total_cost_usd           || 0;
+    const costKrw      = data.total_cost_krw           || 0;
 
-    const totalForBar = inputTokens + outputTokens || 1;
-    const inputWidth = (inputTokens / totalForBar) * 100;
-    const outputWidth = (outputTokens / totalForBar) * 100;
+    // 입력/출력 토큰 비율 계산 (막대 그래프 width% 용)
+    // 0으로 나누기 방지: 합이 0이면 1로 대체
+    const totalForBar  = inputTokens + outputTokens || 1;
+    const inputWidth   = (inputTokens  / totalForBar) * 100;
+    const outputWidth  = (outputTokens / totalForBar) * 100;
 
+    // 최근 API 호출 기록 목록 HTML 생성
     const history = (data.history || []).map(h => `
       <div style="
         display:flex;
@@ -68,7 +131,10 @@ async function renderTokenPage() {
       </div>
     `).join("");
 
+    // 대시보드 전체 내용 삽입
     document.getElementById("token-card").innerHTML = `
+
+      <!-- 요약 카드: 총 토큰, API 호출 횟수 -->
       <div style="display:flex; gap:16px; margin-bottom:18px; flex-wrap:wrap;">
         <div style="
           flex:1;
@@ -97,6 +163,7 @@ async function renderTokenPage() {
         </div>
       </div>
 
+      <!-- 입력/출력 토큰 비율 레이블 -->
       <div style="
         display:flex;
         justify-content:space-between;
@@ -108,6 +175,7 @@ async function renderTokenPage() {
         <span>출력 ${outputTokens.toLocaleString()}</span>
       </div>
 
+      <!-- 입력/출력 비율 막대 그래프 (파란색: 입력, 주황색: 출력) -->
       <div style="
         display:flex;
         width:100%;
@@ -121,6 +189,7 @@ async function renderTokenPage() {
         <div style="width:${outputWidth}%; background:#f28c52;"></div>
       </div>
 
+      <!-- 예상 비용 표시 (USD + KRW) -->
       <div style="
         background:#fffaf0;
         border:1px solid #f2d6a2;
@@ -133,6 +202,7 @@ async function renderTokenPage() {
         💰 예상 비용 : $ ${costUsd} (₩ ${Number(costKrw).toLocaleString()})
       </div>
 
+      <!-- 최근 API 호출 기록 -->
       <div style="
         font-size:20px;
         font-weight:800;
@@ -142,6 +212,7 @@ async function renderTokenPage() {
       ${history || `<div style="color:#666;">기록 없음</div>`}
     `;
   } catch (err) {
+    // 오류 발생 시 오류 메시지 표시
     document.getElementById("token-card").innerHTML = `
       <div style="
         background:#fff5f5;

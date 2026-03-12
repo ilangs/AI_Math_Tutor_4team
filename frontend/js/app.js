@@ -100,7 +100,6 @@ async function apiFetch(path, options = {}) {
   });
 }
 
-// ⭐ 앱 시작 시 실행될 로직 추가
 /**
  * DOMContentLoaded 이벤트 핸들러 (첫 번째)
  * ─────────────────────────────────────────
@@ -239,7 +238,7 @@ async function initApp() {
 
   // 토큰이 없으면 → 로그인 화면으로 즉시 이동
   if (!token) {
-    window.location.href = "/"; // ⭐ login.html 대신 루트 경로로 이동
+    window.location.href = "/"; // 루트 경로로 이동 (server.py에서 login.html 반환)
     return;
   }
 
@@ -250,7 +249,7 @@ async function initApp() {
     // 서버가 오류 응답(401 Unauthorized 등)을 돌려주면 토큰이 무효
     if (!res.ok) {
       sessionStorage.clear();           // 잘못된 토큰 삭제
-      window.location.href = "/"; // ⭐ 인증 실패 시 루트로
+      window.location.href = "/";       // 인증 실패 시 로그인 페이지로
       return;
     }
 
@@ -269,7 +268,7 @@ async function initApp() {
     // 예: user.character = "rumi" → /assets/images/rumi.png
     const img = document.getElementById("user-character");
     if (img && user.character) {
-      // ⭐ 경로 앞에 / 추가하여 절대 경로 보장
+      // 절대 경로 사용 (상대 경로는 현재 URL에 따라 달라질 수 있음)
       img.src = `/assets/images/${user.character}.png`;
     }
 
@@ -376,7 +375,7 @@ function goPage(pageName) {
     }
   }
 
-  // ⭐ 지수 토큰 페이지(section5.js) 초기화
+  // 토큰 로그 페이지(section5.js) 초기화
   if (pageName === "token") {
     // renderTokenPage 함수가 존재하는지 확인 후 호출 (section5.js에 정의됨)
     if (typeof renderTokenPage === "function") {
@@ -621,7 +620,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 
-// 팝업창 대신 모달 창으로 메시지를 보여주는 함수
+/**
+ * showCustomPopup(message)
+ * ─────────────────────────────────────
+ * [역할] 브라우저 기본 alert() 대신 사용하는 커스텀 팝업 모달을 표시합니다.
+ *        id="custom-popup" 인 요소를 화면 중앙에 띄워 메시지를 전달합니다.
+ *
+ * [사용 예시]
+ *   showCustomPopup("단원을 선택하세요.😄");
+ *   showCustomPopup("로그인 중 오류가 발생했습니다.😢");
+ *
+ * @param {string} message - 팝업에 표시할 메시지 텍스트
+ */
 function showCustomPopup(message) {
     const popup = document.getElementById("custom-popup");
     const text = document.getElementById("popup-message");
@@ -630,6 +640,12 @@ function showCustomPopup(message) {
     popup.style.display = "flex";
 }
 
+/**
+ * closeCustomPopup()
+ * ─────────────────────────────────────
+ * [역할] showCustomPopup()으로 표시된 커스텀 팝업 모달을 닫습니다.
+ *        팝업 내의 "확인" 버튼 onclick 이벤트에서 호출됩니다.
+ */
 function closeCustomPopup() {
     document.getElementById("custom-popup").style.display = "none";
 }

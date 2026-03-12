@@ -385,7 +385,7 @@ function appendChatBubble(role, content, skipScroll, ttsText) {
         ttsBtn.innerText = "🔊 음성 듣기";
         ttsBtn.dataset.ttsState = "idle";     // 초기 상태: 대기 중
 
-        // ⭐ ttsText가 넘어오지 않으면(과거 대화 등), 정제 함수를 거친 텍스트를 읽도록 설정
+        // ttsText가 없는 경우(과거 대화 복원 등) 정제 함수로 LaTeX 기호를 제거한 텍스트를 사용
         // LaTeX 기호를 제거해 TTS 엔진이 제대로 읽을 수 있는 텍스트로 변환
         var textToRead = ttsText || cleanTextForCopy(content);
 
@@ -403,12 +403,11 @@ function appendChatBubble(role, content, skipScroll, ttsText) {
         copyBtn.className = "free-copy-btn";
         copyBtn.innerText = "📋 답변 복사";
 
-        // ⭐ 복사 버튼 클릭 이벤트
+        // 복사 버튼 클릭 이벤트: LaTeX 기호를 일반 텍스트로 변환 후 클립보드에 복사
         copyBtn.addEventListener("click", function (e) {
             e.preventDefault();
             e.stopPropagation();
 
-            // ⭐ 이 부분이 추가되었습니다! (위에서 만든 함수 적용)
             // LaTeX 기호를 일반 텍스트로 변환 후 복사
             var textToCopy = cleanTextForCopy(content);
 
@@ -602,7 +601,7 @@ async function toggleFreeTTS(text, btn) {
     btn.innerText = "🔊 생성 중...";
     btn.disabled = true;  // 생성 완료 전까지 버튼 비활성화
 
-    // ⭐ 추가: TTS 엔진이 헷갈리는 기호와 특정 단어의 발음을 완벽한 한글로 강제 교정
+    // TTS 엔진이 수학 기호를 잘못 읽는 문제 방지: 기호를 한글 발음으로 교정
     var safeText = text.replace(/÷/g, " 나누기 ")
                        .replace(/=/g, " 은 ")
                        .replace(/×/g, " 고파기 ")
@@ -624,7 +623,7 @@ async function toggleFreeTTS(text, btn) {
 
         var data = await res.json();
 
-        // ⭐ 핵심 수정: section1.js와 동일하게 문자열/객체 응답을 모두 안전하게 커버합니다!
+        // section1.js와 동일한 방식: 문자열/객체 응답을 모두 안전하게 처리
         // 응답이 문자열 → 그 자체가 base64
         // 응답이 객체 → data.audio_b64 에서 추출
         var audioData = typeof data === "string" ? data : data.audio_b64;
@@ -904,7 +903,6 @@ async function copyAnswerToClipboard(text, btn) {
  * @param {string} text - LaTeX 기호가 포함된 텍스트
  * @returns {string} 정제된 일반 텍스트
  */
-// 복사용 텍스트 정제 함수 (수식 기호를 일반 문자로 변환)
 function cleanTextForCopy(text) {
     if (!text) return "";
     var res = text;

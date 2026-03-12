@@ -50,7 +50,6 @@ let currentAnswer = "";
 // 현재 문제 텍스트 (TTS 읽기 등에 활용)
 let currentQuestionText = "";
 
-// ⭐ [모달 전용 TTS 상태 관리 변수]
 // 모달 내 "음성 듣기" 버튼을 위한 Audio 객체
 let currentModalAudio = null;
 // TTS 재생 상태: "idle"(대기), "loading"(생성중), "playing"(재생중), "paused"(일시정지)
@@ -82,7 +81,6 @@ let currentModalTtsState = "idle";
  * @param {string} text  - TTS로 읽어줄 텍스트
  * @param {HTMLElement} btnEl - 클릭된 TTS 버튼 요소 (버튼 텍스트 업데이트용)
  */
-// ⭐ [모달 전용 TTS 토글 함수]
 async function toggleModalTTS(text, btnEl) {
   // 1. 전역에 다른 TTS 중지 함수가 있다면 호출
   // section2.js의 자유학습 TTS가 재생 중이면 먼저 중지
@@ -261,7 +259,6 @@ function logMathText(label, text) {
  *
  * [주의] Audio 객체를 null로 설정해 메모리를 해제합니다.
  */
-// ⭐ [중요: 모달이 닫힐 때 오디오를 완전히 끄는 함수]
 function stopAllModalAudio() {
   if (currentModalAudio) {
     currentModalAudio.pause();       // 재생 중지
@@ -393,17 +390,16 @@ function showSolutionModal(title, content, buttonText, onNext, showTts = false) 
   if (solBox) {
     solBox.style.display = "block";
 
-    // ⭐ [핵심 수정] '풀이 설명' 제목 부분에 캐릭터 이미지를 함께 넣도록 HTML 구조 변경
-    // assets/images/main_rumi.png 경로를 사용합니다.
+    // 풀이 설명 박스에 루미 선생님 이미지와 제목을 함께 표시
     solBox.innerHTML = `
       <div style="display: flex; align-items: center;
-              margin-top: -40px;    /* ⭐ 1. 이 값을 더 작은 마이너스(예: -20px)로 할수록 위로 붙습니다 */
+              margin-top: -40px;
               margin-bottom: 15px;
               border-bottom: 2px solid #e0e0e0;
               padding-bottom: 10px;">
     <img src="assets/images/main_rumi.png" alt="루미 선생님"
          style="width: 160px; height: auto;
-                margin-top: 0;       /* ⭐ 2. 이미지 자체의 상단 여백도 0으로 확인 */
+                margin-top: 0;
                 margin-right: 15px;
     <h3 style="margin: 0; font-size: 2rem; color: #333;">💡 루미 선생님의 풀이 설명</h3>
   </div>
@@ -411,26 +407,20 @@ function showSolutionModal(title, content, buttonText, onNext, showTts = false) 
     `;
   }
 
-  // ⭐ HTML 구조가 바뀌었으므로, 새로운 solutionText 요소를 다시 잡아야 합니다.
   // solBox.innerHTML을 새로 작성했기 때문에 위에서 가져온 solEl 참조가 무효화됨
+  // 새로운 solutionText 요소를 다시 가져와야 함
   const newSolEl = document.getElementById("solutionText");
   if (newSolEl) {
     newSolEl.style.display = "block";
     // 수식 렌더링을 위해 prepareMathDisplayText 함수로 분수 등 LaTeX 변환
     newSolEl.innerText = prepareMathDisplayText(content);
 
-    // ⭐ MathJax 수식 렌더링 함수 호출 (화면에 HTML이 그려진 후 실행)
+    // MathJax 수식 렌더링 (HTML 삽입 후 50ms 대기: DOM 업데이트 완료 후 실행)
     if (typeof renderMath === "function") {
       // setTimeout으로 약간의 지연을 주어 DOM 업데이트 완료 후 렌더링
       setTimeout(() => renderMath("solutionText"), 50);
     }
   }
-
-  // if (solEl) {
-  //   solEl.style.display = "block";
-  //   solEl.innerText = prepareMathDisplayText(content);
-  //   if (typeof renderMath === "function") renderMath("solutionText");
-  // }
 
   // TTS 버튼 설정 (showTts가 true인 경우에만 표시)
   if (ttsBtn) {
@@ -579,8 +569,8 @@ function renderToday() {
   const selectUnit = document.getElementById("step-select_unit");
   if (selectUnit) selectUnit.style.display = "block";
 
-  // ⭐ [X 버튼 이벤트 강제 바인딩]
-  // 모달 외부에서 정의된 X 버튼을 찾아서 클릭 시 오디오를 정지시킵니다.
+  // 모달의 X 버튼 클릭 시 오디오를 즉시 정지하도록 이벤트 등록
+  // querySelector로 두 가지 클래스명을 모두 지원 (HTML 구조 변경에 대응)
   const closeBtn = document.querySelector("#resultModal .close-btn") ||
                    document.querySelector("#resultModal .modal-close");
   if (closeBtn) {
