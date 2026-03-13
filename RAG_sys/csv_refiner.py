@@ -12,7 +12,7 @@ client = OpenAI(api_key = os.getenv("OPENAI_API_KEY"))
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # BASE_DIR을 기준으로 절대 경로 결합
-INPUT_CSV = os.path.join(BASE_DIR, "data", "processed", "math_tutor_dataset_before.csv")
+INPUT_CSV = os.path.join(BASE_DIR, "data", "processed", "math_dataset.csv")
 OUTPUT_CSV = os.path.join(BASE_DIR, "data", "processed", "math_tutor_dataset.csv")
 
 def process_solution_with_llm(text: str) -> tuple:

@@ -253,6 +253,7 @@ middleProject_4team_202603_modified/
 │
 ├── data/
 │   └── processed/
+│       ├── math_dataset.csv        # ZIP 내부 JSON 순회 OCR 텍스트 추출
 │       └── math_tutor_dataset.csv  # 정제된 최종 수학 문제 데이터셋
 │
 └── database/
