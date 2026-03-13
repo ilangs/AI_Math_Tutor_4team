@@ -215,7 +215,7 @@ ChromaDB 벡터 DB 완성
 ## 📁 프로젝트 구조
 
 ```
-middleProject_4team_202603_modified/
+AI_Math_TutormiddleProject_4team_202603_modified/
 │
 ├── server.py                     # FastAPI 앱 진입점, 미들웨어·라우터 등록
 ├── requirements.txt              # Python 패키지 의존성 목록
@@ -434,12 +434,12 @@ save_token_usage(
 
 | 이름 | 역할 | 담당 영역 |
 |------|------|-----------|
-| 팀장	| Project Leader	| 프로젝트 총괄, 발표 및 LangChain 워크플로우(Chain) 설계 |
-| 팀원 1	| Data Engineer	| 데이터 파이프라인(수집·정제) 구축, RAG 최적화 및 Vector DB |
-| 팀원 2	| Backend Developer	| FastAPI 기반 API 서버 설계, JWT 보안 인증, DB 설계 |
-| 팀원 3	| Frontend Developer	| UI/UX 구현(HTML/JS), 프론트-백엔드 기능 연동 |
-| 팀원 4	| QA & DevRel	| 시스템 통합 테스트, 사용자 피드백 분석, 프로젝트 시연 자료 제작 |
-| 팀원 5	| Product Planner	| 프로젝트 아이데이션(Ideation), 컨셉 및 비즈니스 로직 기획 |
+| 민덕기	| Project Leader	| 프로젝트 총괄, 발표 및 LangChain 워크플로우(Chain) 설계 |
+| 이은미	| Data Engineer	| 데이터 파이프라인(수집·정제) 구축, RAG 최적화 및 Vector DB |
+| 유주석	| Backend Developer	| FastAPI 기반 API 서버 설계, JWT 보안 인증, DB 설계 |
+| 오지수	| Frontend Developer	| UI/UX 구현(HTML/JS), 프론트-백엔드 기능 연동 |
+| 이미지	| QA & DevRel	| 시스템 통합 테스트, 사용자 피드백 분석, 프로젝트 시연 자료 제작 |
+| 강승호	| Product Planner	| 프로젝트 아이데이션(Ideation), 컨셉 및 비즈니스 로직 기획 |
 
 ---
 
