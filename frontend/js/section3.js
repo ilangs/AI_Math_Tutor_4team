@@ -138,7 +138,7 @@ function resetExamState() {
 
   // 제출 영역 숨김, 시작 버튼 비활성화
   if (submitArea) submitArea.style.display = "none";
-  if (startBtn) startBtn.disabled = true;
+  if (startBtn) startBtn.disabled = false;
 
   // 타이머 표시 초기화 ("40:00", 색상/굵기 기본값 복원)
   if (timerDisplay) {
@@ -611,6 +611,7 @@ async function submitExam() {
     // 결과 모달에 채점 내용 채우고 열기
     fillExamResultBody(result);
     openExamResultModal();
+
   } catch (e) {
     console.error("채점 오류", e);
     showExamResultError("서버 연결 오류가 발생했습니다.");
@@ -641,6 +642,10 @@ function openExamResultModal() {
 
   modal.classList.remove("hidden");
   modal.style.display = "flex";
+
+  // 반복 시험 시에도 결과지 맨 위부터 표시
+  const box = document.getElementById("examResultModalBox");
+  if (box) box.scrollTop = 0;
 }
 
 /**

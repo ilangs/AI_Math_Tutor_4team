@@ -120,7 +120,6 @@ def generate_speech_with_cache(text: str) -> bytes:
     # 같은 텍스트는 항상 같은 해시값을 생성하므로 캐시 키 역할을 합니다.
     text_hash = hashlib.md5(text.encode()).hexdigest()
 
-    # ⭐ 핵심 변경: 프로젝트 폴더(assets/audio) 대신, Live Server가 감시하지 못하는 'OS 임시 폴더'를 사용합니다!
     audio_dir = os.path.join(tempfile.gettempdir(), "ai_math_tutor_audio")
 
     # 임시 폴더가 없으면 새로 생성합니다.
@@ -185,8 +184,7 @@ def get_problem_by_unit(unit_name: str) -> dict:
     return None
 
 
-# ⭐ 시험용 문제 추출
-
+# 시험용 문제 추출
 def get_exam_problems(unit_name: str, n: int =3) -> list:
     """
     【시험 문제 추출 함수】
@@ -320,7 +318,7 @@ concept_eval_prompt = ChatPromptTemplate.from_messages([
     2. 이해도가 충분하면 답변 마지막에 반드시 [PASS]라고 적어주세요.
     3. 설명이 부족하거나 틀렸다면 친절하게 교정해주고, 답변 마지막에 반드시 [FAIL]이라고 적어주세요.
     4. 모든 피드백은 따뜻하고 격려하는 말투로 작성하세요.
-    5. 수학과 무관한 엉뚱한 대답을 하면 부드럽게 수학 학습으로 유도해줘.
+    5. 수학과 무관한 엉뚱한 대답을 하면 부드럽게 수학 학습으로 유도해 주세요.
     """),
     ("user", "{student_explanation}")   # 학생이 입력한 설명 텍스트가 들어갑니다.
 ])
@@ -353,9 +351,11 @@ answer_eval_prompt = ChatPromptTemplate.from_messages([
 
     [가이드라인]
     1. 정답 여부와 함께 학생이 어느 부분을 잘했는지 혹은 왜 틀렸는지 친절하게 설명해줘.
-    2. 다시 생각해 볼 수 있는 '힌트'와 함께 정답을 명확하게 풀이해 줘.
-    3. 모든 수식은 LaTeX 형식(예: $2 + 3 = 5$)으로 작성해줘.
-    4. **반드시 답변의 맨 마지막 줄에 [정답] 또는 [오답]이라고 명확하게 적어줘.**
+    2. 틀렸을 때는 다시 생각해 볼 수 있는 '힌트'와 함께 정답과 풀이를 명확하게 보여줘.
+    3. 답이 없을 때 "답변을 기다린다"는 식의 대화형 문구는 절대 사용하지 않는다.
+    4. 모든 수식은 LaTeX 형식(예: $2 + 3 = 5$)으로 작성해줘.
+    5. 학생의 답변(student_answer)이 비어있으면 [오답]으로 처리한다. 
+    6. **반드시 답변의 맨 마지막 줄에 [정답] 또는 [오답]이라고 명확하게 적어줘.**
     """),
     ("user", "{student_answer}")    # 학생이 제출한 답안이 들어갑니다.
 ])
@@ -638,8 +638,8 @@ def entry_router(state: TutorState) -> str:
 workflow = StateGraph(TutorState)
 
 # 노드 등록: (노드 이름, 실행할 함수)를 연결합니다.
-workflow.add_node("get_units", fetch_units_node)        # 단원 목록 조회 노드
-workflow.add_node("get_problem", fetch_problem_node)    # 문제 조회 노드
+workflow.add_node("get_units", fetch_units_node)         # 단원 목록 조회 노드
+workflow.add_node("get_problem", fetch_problem_node)     # 문제 조회 노드
 workflow.add_node("eval_concept", evaluate_concept_node) # 개념 이해도 평가 노드
 workflow.add_node("eval_answer", evaluate_answer_node)   # 문제 정오답 평가 노드
 
@@ -655,7 +655,7 @@ workflow.set_conditional_entry_point(
 )
 
 # 일반 엣지 정의: A 노드가 완료되면 항상 B 노드로 이동합니다.
-workflow.add_edge("get_units", "get_problem")   # 단원 조회 완료 → 문제 조회
+workflow.add_edge("get_units", "get_problem")    # 단원 조회 완료 → 문제 조회
 workflow.add_edge("get_problem", END)            # 문제 조회 완료 → 그래프 종료
 workflow.add_edge("eval_concept", END)           # 개념 평가 완료 → 그래프 종료
 workflow.add_edge("eval_answer", END)            # 정오답 평가 완료 → 그래프 종료
