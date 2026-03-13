@@ -215,7 +215,7 @@ ChromaDB 벡터 DB 완성
 ## 📁 프로젝트 구조
 
 ```
-AI_Math_TutormiddleProject_4team_202603_modified/
+AI_Math_Tutor_4team/
 │
 ├── server.py                     # FastAPI 앱 진입점, 미들웨어·라우터 등록
 ├── requirements.txt              # Python 패키지 의존성 목록
