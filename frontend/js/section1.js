@@ -392,18 +392,16 @@ function showSolutionModal(title, content, buttonText, onNext, showTts = false) 
 
     // 풀이 설명 박스에 루미 선생님 이미지와 제목을 함께 표시
     solBox.innerHTML = `
-      <div style="display: flex; align-items: center;
-              margin-top: -40px;
-              margin-bottom: 15px;
-              border-bottom: 2px solid #e0e0e0;
-              padding-bottom: 10px;">
-    <img src="assets/images/main_rumi.png" alt="루미 선생님"
-         style="width: 160px; height: auto;
-                margin-top: 0;
-                margin-right: 15px;
-    <h3 style="margin: 0; font-size: 2rem; color: #333;">💡 루미 선생님의 풀이 설명</h3>
-  </div>
-  <div id="solutionText" style="font-size: 1.1rem; line-height: 1.6; color: #444; white-space: pre-wrap;"></div>
+      <div style="display:flex; align-items:center; margin-top:-75px; margin-bottom:6px; border-bottom:2px solid #e0e0e0; padding-bottom:12px; padding-left:30px;">
+        <img
+          src="/assets/images/main_rumi.png"
+          alt="루미 선생님"
+          style="width:200px; height:auto; margin-top:0; margin-right:0; flex-shrink:0;"
+        ><h3 style="margin:0 0 0 40px; font-size:1.7rem; color:#333;">💡 루미 선생님의 풀이 설명</h3>
+      </div><div
+        id="solutionText"
+        style="font-size:1.3rem; color:#444; padding-top:40px; padding-left:20px; padding-right:20px;"
+      ></div>
     `;
   }
 
@@ -584,20 +582,18 @@ function renderToday() {
   if (btnStart && !btnStart.dataset.bound) {
     btnStart.dataset.bound = "1";  // 이벤트가 등록됐음을 표시
     btnStart.addEventListener("click", async () => {
-      // 로딩 오버레이 표시 (화면 전체를 반투명으로 덮어 "처리 중" 표시)
-      document.getElementById("loading-overlay").style.display = "flex";
-      // DOM 업데이트가 즉시 반영되도록 잠깐 대기 (비동기 처리의 실행 순서 보장)
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // 선택된 단원 가져오기
+      // 먼저 선택된 단원 확인
       const unit = document.getElementById("unit-select")?.value;
       if (!unit) {
-        document.getElementById("loading-overlay").style.display = "none";
         showCustomPopup("단원을 선택하세요.😄");
         return;
       }
 
-      // 선택된 단원을 localStorage에 저장 (다른 함수에서 참조용)
+      // 단원이 선택된 경우에만 로딩 표시
+      document.getElementById("loading-overlay").style.display = "flex";
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // 선택된 단원을 localStorage에 저장
       localStorage.setItem("selected_unit", unit);
 
       try {

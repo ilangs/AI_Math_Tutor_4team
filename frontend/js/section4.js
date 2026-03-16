@@ -81,6 +81,7 @@ async function loadScoreLog() {
  * @param {HTMLElement} card    - 성적 로그 카드 요소 (내용을 채울 컨테이너)
  * @param {Array}       results - 시험 결과 객체 배열
  */
+
 function renderScoreLog(card, results) {
   // 시험 기록이 없는 경우 안내 메시지 표시
   if (results.length === 0) {
@@ -109,7 +110,7 @@ function renderScoreLog(card, results) {
     <div class="score-dashboard">
 
       <h2>시험 기록 요약</h2>
-      <div class="score-summary">
+      <div class="score-summary" style="display:grid; grid-template-columns:1.8fr 1fr 1fr; gap:20px;">
         <div class="summary-card">
           <div class="summary-label">최근 시험 단원</div>
           <div class="summary-value">${escapeHtmlScore(latest.unit)}</div>
@@ -125,7 +126,7 @@ function renderScoreLog(card, results) {
       </div>
 
       <h2>점수 변화 그래프</h2>
-      <div class="graph-card">
+      <div class="graph-card graph-scroll">
         ${buildScoreGraphSvg(scores)}
       </div>
 
@@ -199,61 +200,87 @@ function convertScoreTo100(score, totalQuestions) {
  * @param {Array<number>} scores - 100점 만점 기준 점수 배열 (시간 순서대로)
  * @returns {string} SVG HTML 문자열
  */
+
 function buildScoreGraphSvg(scores) {
   if (!scores || scores.length === 0) return "<p>데이터가 없습니다.</p>";
 
-  // 그래프 전체 크기와 여백(Padding) 설정
-  const W = 800, H = 260;
-  const PAD_L = 65, PAD_R = 30, PAD_T = 20, PAD_B = 50;
+  function getScoreColor(score) {
+    if (score >= 80) return "#e53935";   // 빨강
+    if (score <= 50) return "#1e88e5";   // 파랑
+    return "#43a047";                    // 초록
+  }
 
-  // 실제 그래프 영역 크기 (여백 제외)
+  const H = 300;
+  const PAD_L = 80, PAD_R = 30, PAD_T = 35, PAD_B = 55;
+
+  // 데이터 많아지면 가로폭 자동 증가
+  const stepX = 48;
+  const START_OFFSET = stepX;
+
+  const W = Math.max(800, PAD_L + PAD_R + START_OFFSET + stepX * (scores.length - 1));
+
   const graphW = W - PAD_L - PAD_R;
   const graphH = H - PAD_T - PAD_B;
 
-  // Y축 범위와 스케일
   const yMin = 0, yMax = 100;
   const yScale = graphH / (yMax - yMin);
 
-  // 데이터 좌표 → 화면 좌표 변환 함수
-  // 점수가 1개일 때는 그래프 중앙에 배치
-  const toX = (i) => PAD_L + (scores.length > 1
-    ? i * (graphW / (scores.length - 1))
-    : graphW / 2);
-  // Y축은 위쪽이 높은 점수이므로 역방향으로 변환
+  const toX = (i) => PAD_L + START_OFFSET + (scores.length > 1 ? i * stepX : graphW / 2);
   const toY = (s) => PAD_T + graphH - (s - yMin) * yScale;
 
-  // SVG 태그 시작 (반응형: width="100%")
-  let svg = `<svg width="100%" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  let svg = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">`;
+  
+  // 배경
+  svg += `<rect x="0" y="0" width="${W}" height="${H}" rx="16" fill="#fcfcfc"/>`;
 
-  // Y축(세로선) 그리기
-  svg += `<line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T + graphH}" stroke="#999" stroke-width="2"/>`;
-  // X축(가로선) 그리기
-  svg += `<line x1="${PAD_L}" y1="${PAD_T + graphH}" x2="${PAD_L + graphW}" y2="${PAD_T + graphH}" stroke="#999" stroke-width="2"/>`;
+  // Y축 / X축
+  svg += `<line x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${PAD_T + graphH}" stroke="#b0b0b0" stroke-width="2"/>`;
+  svg += `<line x1="${PAD_L}" y1="${PAD_T + graphH}" x2="${PAD_L + graphW}" y2="${PAD_T + graphH}" stroke="#b0b0b0" stroke-width="2"/>`;
 
-  // Y축 눈금 및 수평 점선 그리기 (20, 40, 60, 80, 100)
+  // 눈금선
   [20, 40, 60, 80, 100].forEach(val => {
     const y = toY(val);
-    svg += `<text x="${PAD_L - 8}" y="${y + 5}" font-size="13" text-anchor="end" fill="#666">${val}</text>`;
-    svg += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L + graphW}" y2="${y}" stroke="#eee" stroke-width="1" stroke-dasharray="4"/>`;
+    svg += `<text x="${PAD_L - 10}" y="${y + 5}" font-size="13" text-anchor="end" fill="#666">${val}</text>`;
+    svg += `<line x1="${PAD_L}" y1="${y}" x2="${PAD_L + graphW}" y2="${y}" stroke="#e9e9e9" stroke-width="1" stroke-dasharray="4 4"/>`;
   });
 
-  // 점수가 2개 이상일 때만 꺾은선(polyline) 그리기
-  if (scores.length > 1) {
-    const pts = scores.map((s, i) => `${toX(i)},${toY(s)}`).join(" ");
-    svg += `<polyline fill="none" stroke="#222" stroke-width="3" points="${pts}"/>`;
+  // 점수 구간별 선분 색상
+  for (let i = 0; i < scores.length - 1; i++) {
+    const x1 = toX(i);
+    const y1 = toY(scores[i]);
+    const x2 = toX(i + 1);
+    const y2 = toY(scores[i + 1]);
+
+    const lineColor = getScoreColor(scores[i + 1]);
+
+    svg += `<line
+      x1="${x1}" y1="${y1}"
+      x2="${x2}" y2="${y2}"
+      stroke="${lineColor}"
+      stroke-width="4"
+      stroke-linecap="round"
+      opacity="0.95"
+    />`;
   }
 
-  // 각 점수 위치에 원과 점수 레이블 그리기
+  // 각 점 + 점수
   scores.forEach((s, i) => {
     const x = toX(i);
     const y = toY(s);
-    svg += `<circle cx="${x}" cy="${y}" r="6" fill="#222"/>`;
-    svg += `<text x="${x}" y="${y - 11}" font-size="12" text-anchor="middle" fill="#333">${s}점</text>`;
-    // X축 아래에 회차 번호 표시 (1회, 2회, ...)
-    svg += `<text x="${x}" y="${PAD_T + graphH + 22}" font-size="13" text-anchor="middle" fill="#555">${i + 1}회</text>`;
+    const color = getScoreColor(s);
+
+    // 점 glow 느낌
+    svg += `<circle cx="${x}" cy="${y}" r="10" fill="${color}" opacity="0.18"/>`;
+    svg += `<circle cx="${x}" cy="${y}" r="6" fill="${color}" stroke="#fff" stroke-width="2"/>`;
+
+    // 점수 텍스트
+    svg += `<text x="${x}" y="${y - 14}" font-size="12" font-weight="600" text-anchor="middle" fill="${color}">${s}</text>`;
+
+    // 회차
+    svg += `<text x="${x}" y="${PAD_T + graphH + 24}" font-size="13" text-anchor="middle" fill="#666">${i + 1}회</text>`;
   });
 
-  svg += "</svg>";
+  svg += `</svg>`;
   return svg;
 }
 
@@ -306,7 +333,7 @@ function getStatusBadge(score) {
   if (score <= 50) return `<span class="status-badge danger">노력해야겠어요!</span>`;
   if (score <= 70) return `<span class="status-badge up">조금만 더 열심히 해보도록 해요!</span>`;
   if (score <= 90) return `<span class="status-badge good">정말 훌륭하네요!</span>`;
-  return `<span class="status-badge stable">당신은 수학천재!</span>`;
+  return `<span class="status-badge stable">🏆 당신은 수학천재!</span>`;
 }
 
 /**

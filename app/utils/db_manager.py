@@ -595,7 +595,7 @@ def get_token_stats_from_db(username: str) -> dict:
     cost_usd   = agg[3]
     call_count = agg[4]
 
-    # timestamp 예: "2026-03-12 14:23:05" → "14:23" 추출
+    # timestamp : "2026-03-12 14:23"
     history = [
         {
             "action":     r[0],
@@ -603,7 +603,7 @@ def get_token_stats_from_db(username: str) -> dict:
             "completion": r[2],
             "total":      r[3],
             "cost_usd":   round(r[4], 5),
-            "ts":         r[5][11:16] if r[5] else "--:--",
+            "ts":         r[5][:16] if r[5] else "--",
         }
         for r in rows
     ]

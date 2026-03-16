@@ -555,6 +555,11 @@ async function submitExam() {
   // 이미 채점 중이면 무시 (중복 제출 방지)
   if (examSubmitting) return;
 
+  if (!examStarted) {
+    showCustomPopup("시험을 먼저 시작하세요.😄");
+    return;
+  }
+
   if (examProblems.length === 0) {
     showCustomPopup("시험지가 없습니다.😢");
     return;
@@ -611,7 +616,6 @@ async function submitExam() {
     // 결과 모달에 채점 내용 채우고 열기
     fillExamResultBody(result);
     openExamResultModal();
-
   } catch (e) {
     console.error("채점 오류", e);
     showExamResultError("서버 연결 오류가 발생했습니다.");
@@ -638,14 +642,16 @@ async function submitExam() {
  */
 function openExamResultModal() {
   const modal = document.getElementById("examResultModal");
+  const box = modal?.querySelector(".modal-box");
   if (!modal) return;
 
   modal.classList.remove("hidden");
   modal.style.display = "flex";
+  // 모달이 열릴 때 사운드 효과 재생 (사용자 경험 향상)
+  playModalSound();
 
-  // 반복 시험 시에도 결과지 맨 위부터 표시
-  const box = document.getElementById("examResultModalBox");
-  if (box) box.scrollTop = 0;
+  if (box) box.scrollTop = 0;   // 핵심 : 모달 내용이 길어질 수 있으므로 스크롤을 맨 위로 초기화
+  
 }
 
 /**
@@ -655,10 +661,10 @@ function openExamResultModal() {
  *        점수, 평가 메시지, 틀린 문제 풀이 설명을 표시합니다.
  *
  * [점수 등급 분류]
- *   - 50점 이하: "노력해야겠어요!"
- *   - 70점 이하: "조금만 더 열심히 해보도록 해요!"
- *   - 90점 이하: "정말 훌륭하네요!"
- *   - 91점 이상: "당신은 수학천재!"
+ *   - 50점 이하: "조금 더 연습해 봅시다! 화이팅!"
+ *   - 70점 이하: "괜찮아요! 조금만 더 하면 잘할 수 있어요!"
+ *   - 90점 이하: "너무 훌륭해요! 수학을 정말 잘하네요!"
+ *   - 91점 이상: "진짜 대단해요! 우리 친구는 수학 천재!"
  *
  * [MathJax 렌더링]
  *   틀린 문제 풀이 내 수식을 렌더링하기 위해
@@ -681,16 +687,20 @@ function fillExamResultBody(result) {
   // 100점 만점으로 환산 (문제 당 10점)
   const displayScore = correct * 10;
 
+  if (displayScore === 100) {
+  showHearts();
+  }
+
   // 점수 구간별 평가 메시지
   let levelText = "";
   if (displayScore <= 50) {
-    levelText = "노력해야겠어요!";
+    levelText = "조금 더 연습해 봅시다! 화이팅!";
   } else if (displayScore <= 70) {
-    levelText = "조금만 더 열심히 해보도록 해요!";
+    levelText = "괜찮아요! 조금만 더 하면 잘할 수 있어요!";
   } else if (displayScore <= 90) {
-    levelText = "정말 훌륭하네요!";
+    levelText = "너무 훌륭해요! 수학을 정말 잘하네요!";
   } else {
-    levelText = "당신은 수학천재!";
+    levelText = "진짜 대단해요! 우리 친구는 수학 천재!";
   }
 
   // 틀린 문제별 풀이 설명 HTML 생성
@@ -730,9 +740,17 @@ function fillExamResultBody(result) {
     <p style="font-size:24px; font-weight:bold; margin-bottom:10px;">
       시험 점수 : ${displayScore}점 / 100점
     </p>
-    <p style="font-size:18px; margin-bottom:20px;">
-      평가 : ${levelText}
-    </p>
+    <div style="
+    background:#fff3cd;
+    border:1px solid #ffe69c;
+    padding:12px 16px;
+    border-radius:10px;
+    font-size:20px;
+    font-weight:600;
+    margin-bottom:20px;
+    display:inline-block;">
+    ⭐ ${levelText}
+    </div>
     <h3 style="margin:0 0 12px 0; font-size:20px;">틀린 문제 풀이</h3>
     ${feedbackHtml}
   `;
@@ -899,4 +917,34 @@ function bindExamModalEvents() {
       return false;
     };
   }
+}
+
+function showHearts() {
+
+  let count = 0;
+
+  const interval = setInterval(() => {
+
+    const heart = document.createElement("div");
+    heart.innerHTML = "❤️";
+    heart.className = "floating-heart";
+
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = Math.floor(Math.random() * 25 + 30) + "px";
+    heart.style.animationDuration = (Math.random() * 3 + 3) + "s";
+
+    document.body.appendChild(heart);
+
+    setTimeout(() => {
+      heart.remove();
+    }, 6000);
+
+    count++;
+
+    if (count > 40) {   // 하트 총 개수
+      clearInterval(interval);
+    }
+
+  }, 80);  // 생성 간격 (작을수록 촤라라라)
+
 }

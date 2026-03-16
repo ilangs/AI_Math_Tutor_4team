@@ -69,6 +69,7 @@ from app.utils.db_manager import get_user, verify_password, create_user
 # .env 파일에서 환경 변수를 로드합니다.
 # JWT_SECRET_KEY 같은 민감한 값을 코드에 직접 작성하지 않기 위함입니다.
 load_dotenv()
+api_key = os.environ.get("OPENAI_API_KEY")
 
 # ─────────────────────────────────────────────────────────
 # ① JWT 설정값

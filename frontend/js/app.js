@@ -39,6 +39,37 @@
 // ─────────────────────────────────────────────────────────────
 const API = ""
 
+// ─────────────────────────────────────────────────────────────
+// 모달 사운드 효과 (문제 풀이 결과 모달에서 사용)
+// ─────────────────────────────────────────────────────────────  
+const modalSound = new Audio("/assets/audio/button.mp3");
+modalSound.preload = "auto";
+
+let modalSoundUnlocked = false;
+
+function unlockModalSound() {
+  if (modalSoundUnlocked) return;
+  modalSound.volume = 0;
+  modalSound.play()
+    .then(() => {
+      modalSound.pause();
+      modalSound.currentTime = 0;
+      modalSound.volume = 1;
+      modalSoundUnlocked = true;
+      console.log("모달 사운드 잠금 해제 완료");
+    })
+    .catch(err => {
+      console.log("사운드 잠금 해제 실패:", err);
+    });
+}
+
+document.addEventListener("click", unlockModalSound, { once: true });
+
+function playModalSound() {
+  modalSound.currentTime = 0;
+  modalSound.play().catch(err => console.log("사운드 재생 실패:", err));
+}
+
 //───────────────────────────────────────
 // 인증 및 초기화
 //───────────────────────────────────────
@@ -489,6 +520,8 @@ function openResultModal() {
   modal.classList.remove("hidden");
   // flex 레이아웃으로 표시 (모달 내용을 가운데 정렬하기 위해 flex 사용)
   modal.style.display = "flex";
+  // 모달이 열릴 때 사운드 효과 재생 (사용자 경험 향상)
+  playModalSound();
 }
 
 /**
@@ -531,6 +564,8 @@ function openFeedbackModal() {
 
   modal.classList.remove("hidden");
   modal.style.display = "flex";
+  // 피드백 모달이 열릴 때 사운드 효과 재생 (사용자 경험 향상)
+  playModalSound();
 }
 
 /**
@@ -638,6 +673,8 @@ function showCustomPopup(message) {
 
     text.innerText = message;
     popup.style.display = "flex";
+    // 팝업이 열릴 때 사운드 효과 재생 (사용자 경험 향상)
+    playModalSound();
 }
 
 /**

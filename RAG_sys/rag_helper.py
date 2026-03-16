@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+api_key = os.environ.get("OPENAI_API_KEY")
 
 # ==========================================
 # 🌟 절대 경로 세팅
